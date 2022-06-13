@@ -1,0 +1,39 @@
+spring:  
+  config:
+    activate:
+      on-profile:
+      - dev
+  cloud:
+    consul:
+      discovery:
+        instance-id: "${spring.cloud.client.hostname}:${spring.application.name}:${random.int[1,999999]}"
+        instance-zone: dev
+        # health-check-path: "/gateway-service-check"
+        # health-check-interval: 20s
+    gateway: 
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: account-service
+          uri: lb://account-service
+          predicates:
+            - Path=/account/**
+          filters:
+            - RewritePath=/account/(?<path>.*), /$\{path}
+        - id: customer-service
+          uri: lb://customer-service
+          predicates:
+            - Path=/customer/**
+          filters:
+            - RewritePath=/customer/(?<path>.*), /$\{path}
+  output:
+    ansi:
+      enabled: ALWAYS
+
+logging:
+  level:
+    '[org.springframework.web.filter.CommonsRequestLoggingFilter]': DEBUG
+
+server:
+  port: 0
